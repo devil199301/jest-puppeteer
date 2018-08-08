@@ -22,7 +22,8 @@
     "cheerio": "^1.0.0-rc.2"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test-txt": "jest > results.txt 2>&1"
   },
   "keywords": [],
   "author": "",
