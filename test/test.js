@@ -12,7 +12,23 @@ const checkList = {
         fish: `/Lobby/Fish`,
         promotion: `/Promotion`,
         register: `/Register`,
-        mobile: `/Mobile`
+        mobile: `/Mobile`,
+        aboutUS: `/AboutUS`,
+        contact: `/Contact`,
+        HowDeposit: `/How/Deposit`,
+        HowWithdrawal: `/How/Withdrawal`,
+        partner: `/Partner`,
+        SiteMail: `/SiteMail`,
+        BetRecord: `/BetRecord`,
+        WithdrawApplication: `/WithdrawApplication`,
+        Deposit: `/Deposit`,
+        Transaction: `/Transaction`,
+        ChangeMoneyPassword: `/Account/ChangeMoneyPassword`,
+        ChangePassword: `/Account/ChangePassword`,
+        SignOut: `/Account/SignOut`,
+        FAQ: `/FAQ`,
+        invalid: `javascript:void(0)`,
+        empty: `#`
     },
     live: {
         bb: `toBbLive()`,
@@ -74,9 +90,50 @@ const checkList = {
     board: {
         kg: `toKgHtml()`,
         city761: `toCity761Html()`,
-        gpk: `toRgBoard()`
-    }
+        gpk: `toRgBoard()`,
+        fg: `toFsBoard()`,
+        nw: `toNwBoard()`
+    },
+    fish: {
+        'ag': `toAgFish()`,
+        'mw': `toMwFish()`,
+        'jdb-dragon': 'toJdbFish()',
+        'gns': `toGnsFish()`,
+        'pg-all': `toPgFish2()`,
+        'bb-expert': `toBbFish()`,
+        'pts': `toPtsFish()`,
+        'city761': `toCity761Fish()`,
+        'fs-thunder': `toFsFishThunder()`,
+        'fs-happy': `toFsFishHappy()`,
+        'jdb-money': `toJdbFishMoney()`,
+        'pt': `toPtFish()`,
+        'jdb-dragon2': `toJdbFish2()`,
+        'pg-fishking': `toPgFish()`,
+        'gpk-tycoon': `toRgFish()`,
+        'bb-master': `toBbFish2()`,
+        'cq9': `toCq9Fish()`,
+        'rg-king': `toRgFish2()`,
+        'fs-beauty': `toFsFishBeauty()`,
+        'fs-bird': `toFsFishBird()`,
+        'fs-everyday': `toFsFishEveryDay()`,
+        'gpk-cut': `toRgCutFish()`,
+    },
+    layout: ['lineChatClick()', 'FreePlayClick()', 'RegisterClick()', 'qqClick(ContactInfo.QQ)', 'agreement()', 'newsClick($index)', 'closeMarquee()', 'close()', 'onTitleClick(item)']
 }
+
+/**
+ * 把 checkList 裡面的 link 轉成 array
+ */
+const linkArray = Object.values(checkList.link);
+
+let clickArray = [];
+Object.keys(checkList).forEach((key) => {
+    if (key !== 'link') {
+        clickArray = clickArray.concat(Object.values(checkList[key]));
+    } else if (key === 'layout') {
+        clickArray = clickArray.concat(checkList[key]);
+    }
+});
 
 /**
  * 連結
@@ -85,7 +142,7 @@ const url = "http://localhost:56873/";
 /**
  * 站代號 (目前檢查試玩LOGO用的)
  */
-const webname = 'AR012-01';
+const webname = 'HD002-01';
 /**
  * 首頁大廳連結
  */
@@ -99,16 +156,17 @@ const errLoad = [];
  */
 const errConsole = [];
 
+/**
+ * 有使用到的文案(從footer-nav和sidebar抓)
+ */
+let unlobby = [];
+
 let page;
 let browser;
 const width = 1400;
 const height = 900;
 
-const getHtmlContent = async() => {
-
-}
-
-beforeAll(async() => {
+beforeAll(async () => {
     browser = await puppeteer.launch({
         headless: false,
         slowMo: 80,
@@ -116,14 +174,18 @@ beforeAll(async() => {
     });
     page = await browser.newPage();
     page.on('console', msg => {
-        if (msg._type === 'error') {
+        if (msg._type === 'error' && !errConsole.includes(msg._text)) {
             errConsole.push(msg._text);
         }
     });
     page.on('response', response => {
-        if (response._status === 404) {
+        if (response._status === 404 && !errLoad.includes(`404 :: ${response._url}`)) {
             errLoad.push(`404 :: ${response._url}`);
         }
+    });
+    page.on('dialog', async dialog => {
+        console.log(dialog.message());
+        await dialog.dismiss();
     });
     await page.setViewport({
         width,
@@ -131,10 +193,10 @@ beforeAll(async() => {
     });
 });
 
-describe("開啟網頁", async() => {
-    test("連線", async() => {
+describe("開啟網頁", async () => {
+    test("連線", async () => {
         await page.goto(url);
-        const html = await page.content();
+        // const html = await page.content();
         // const $ = cheerio.load(html);
         // const head = $('html').attr('ng-app');
         // expect(head).toBe('portalApp');
@@ -156,6 +218,29 @@ describe("開啟網頁", async() => {
     //     })
     // });
 
+    test("找出全部的 href", async () => {
+        const html = await page.content();
+        const $ = cheerio.load(html.replace(/\n/g, ''));
+        const aTagList = $('a[href]');
+        aTagList.each((index, element) => {
+            if (element.attribs.target === '_blank') return;
+            const target = element.attribs.href;
+            if (target !== 'javascript:void(0)' && target !== '/Mobile' && !unlobby.includes(target)) unlobby = unlobby.concat(target);
+            expect(linkArray).toContain(target);
+        })
+    }, 15000);
+
+    test("找出全部的 ng-click", async () => {
+        const html = await page.content();
+        const $ = cheerio.load(html.replace(/\n/g, ''));
+        const ngClickList = $("[ng-click]");
+        ngClickList.each((index, element) => {
+            const target = element.attribs['ng-click'];
+            if (target.match(/(\w*\s?=\s?\w|qqClick\((\w*.\w*|\d)\)|\w*\=\'\w*\')/g)) return;
+            expect(clickArray).toContain(target);
+        })
+    }, 15000);
+
     // test("下拉", async () => {
     //     const html = await page.content();
     //     const $ = cheerio.load(html.replace(/\n/g, ''));
@@ -175,7 +260,7 @@ describe("開啟網頁", async() => {
     //             }
     //         }
     //     })
-    // });
+    // }, 15000);
 
     // if (homeLobbylink) {
     //     test("首頁大廳連結(GAME-BOX)", async () => {
@@ -191,79 +276,140 @@ describe("開啟網頁", async() => {
     //                 }
     //             }
     //         })
-    //     });
+    //     }, 15000);
     // }
 
-    //TODO: ng-href 檢查 
-    test("a tag", async() => {
+    test("ng-href 前後比對", async () => {
+        // 取網頁原始碼(render前))
         const response = await page.goto(url);
         const content = await response.text();
-        const nghref = /ng-href="{{\w*.\w*==''\?\ '#': \w*.\w*}}"/g;
-        const nghrefArray = content.match(nghref);
 
-        
-        console.log(nghrefArray);
-    });
+        // 取所有ng-href
+        const nghrefArray = content.match(/ng-href="{{.*}}"/g);
+
+        // 把擷取 ng-href 內容
+        for (let i = 0; i < nghrefArray.length; i++) {
+            const content = nghrefArray[i].match(/\w*\.\w*/g);
+            expect(content[0]).toBe(content[1]);
+        }
+    }, 15000);
 });
 
-// describe("Lobby", () => {
-//     test("Live", async () => {
-//         await page.goto(`${url}/Lobby/Live`);
+describe("Lobby", () => {
+    test("Live", async () => {
+        await page.goto(`${url}/Lobby/Live`);
+        const html = await page.content();
+        const $ = cheerio.load(html.replace(/\n/g, ''));
+        const list = $('.game-list > li');
+        list.each((index, element) => {
+            const target = element.attribs['game-box'];
+            const click = element.attribs['ng-click'];
+            expect(click).toBe(checkList.live[target]);
+        });
+    }, 15000);
+
+    test("Sport", async () => {
+        await page.goto(`${url}/Lobby/Sport`);
+        const html = await page.content();
+        const $ = cheerio.load(html.replace(/\n/g, ''));
+        const list = $('.game-list > li');
+        list.each((index, element) => {
+            const target = element.attribs['game-box'];
+            const click = element.attribs['ng-click'];
+            expect(click).toBe(checkList.sport[target]);
+        });
+    }, 15000);
+
+    test("Lottery", async () => {
+        await page.goto(`${url}/Lobby/Lottery`);
+        const html = await page.content();
+        const $ = cheerio.load(html.replace(/\n/g, ''));
+        const list = $('.game-list > li');
+        list.each((index, element) => {
+            const target = element.attribs['game-box'];
+            const click = element.attribs['ng-click'];
+            expect(click).toBe(checkList.lottery[target]);
+        });
+    }, 15000);
+});
+
+describe("Logo", () => {
+
+    test("試玩", async () => {
+        await page.goto(`${url}/Trial/Apply`);
+        const getLogoUrl = await page.evaluate(() => {
+            const title = document.querySelector('#trial-logo');
+            return getComputedStyle(title)[`background-image`];
+        });
+        const LogoUrl = getLogoUrl.match(/[A-Z]{2}[\d]{3}-[\d]{2}/g);
+        expect(LogoUrl[0]).toBe(webname);
+    }, 15000);
+
+    test("遊戲登入口", async () => {
+        await page.goto(`${url}/Account/LoginToGame`);
+        // const imgs = await page.$$eval('img[src]', imgs => imgs.map(img => img.getAttribute('src')));
+    }, 15000);
+});
+
+// describe("登入後", () => {
+//     test("找出全部的 href", async () => {
+//         await page.goto(`${url}?pleaseLogin`);
+//         await page.waitFor(20000);
+//         await page.goto(`${url}/Deposit`);
 //         const html = await page.content();
 //         const $ = cheerio.load(html.replace(/\n/g, ''));
-//         const list = $('.game-list > li');
-//         list.each((index, element) => {
-//             const target = element.attribs['game-box'];
-//             const click = element.attribs['ng-click'];
-//             expect(click).toBe(checkList.live[target]);
-//         });
-//     });
+//         const aTagList = $('a[href]');
+//         aTagList.each((index, element) => {
+//             if (element.attribs.target === '_blank') return;
+//             const target = element.attribs.href;
+//             expect(linkArray).toContain(target);
+//         })
+//     }, 60000);
 
-//     test("Sport", async () => {
-//         await page.goto(`${url}/Lobby/Sport`);
-//         const html = await page.content();
-//         const $ = cheerio.load(html.replace(/\n/g, ''));
-//         const list = $('.game-list > li');
-//         list.each((index, element) => {
-//             const target = element.attribs['game-box'];
-//             const click = element.attribs['ng-click'];
-//             expect(click).toBe(checkList.sport[target]);
+//     test("#account Title色碼檢查", async () => {
+//         await page.goto(`${url}/WithdrawApplication`);
+//         const getTitleColor = await page.evaluate(() => {
+//             const title = document.querySelector('.body #title');
+//             return getComputedStyle(title)[`background-color`];
 //         });
-//     });
-
-//     test("Lottery", async () => {
-//         await page.goto(`${url}/Lobby/Lottery`);
-//         const html = await page.content();
-//         const $ = cheerio.load(html.replace(/\n/g, ''));
-//         const list = $('.game-list > li');
-//         list.each((index, element) => {
-//             const target = element.attribs['game-box'];
-//             const click = element.attribs['ng-click'];
-//             expect(click).toBe(checkList.lottery[target]);
-//         });
-//     });
+//         expect(getTitleColor).not.toBe('rgb(204, 0, 51)');
+//     }, 15000);
 // });
 
-// describe("試玩", () => {
-//     test("Logo", async () => {
-//         await page.goto(`${url}/Trial/Apply`);
-//         const logo = await page.evaluate(() => {
-//             const title = document.querySelector('#trial-logo');
-//             return getComputedStyle(title)[`background-image`];
-//         });
-//         const checkUrl = logo.search(webname);
-//         expect(checkUrl).not.toBe(-1);
-//     });
-// });
+describe("內頁", () => {
+    test("關於我們", async () => {
+        await page.goto(`${url}/AboutUS`);
+        const html = await page.content();
+        const $ = cheerio.load(html.replace(/\n/g, ''));
+        const unlobbyList = $('#sidebar a[href]');
+        unlobbyList.each(async (index, element) => {
+            const target = element.attribs.href;
+            if (target !== 'javascript:void(0)' && target !== '/Mobile' && !unlobby.includes(target)) unlobby = unlobby.concat(target);
+        })
+    }, 15000);
 
-// describe("錯誤", () => {
-//     test("沒有404", async () => {
-//         expect(errLoad).toEqual([]);
-//     });
-//     test("沒有ConsoleError", async () => {
-//         expect(errConsole).toEqual([]);
-//     });
-// });
+    test("全部內頁跑一遍", async () => {
+        console.log(`全部頁面：${unlobby}`);
+        for (let i = 0; i < unlobby.length; i++) {
+            await page.goto(`${url}${unlobby[i]}`);
+            const html = await page.content();
+            const $ = cheerio.load(html);
+            const head = $('html').attr('ng-app');
+            // expect(head).toBe('portalApp');
+        }
+
+    }, 60000);
+
+});
+
+describe("錯誤", () => {
+    test("404", async () => {
+        expect(errLoad).toEqual([]);
+    }, 15000);
+    test("ConsoleError", async () => {
+        expect(errConsole).toEqual([]);
+    }, 15000);
+});
 
 afterAll(() => {
     browser.close();
