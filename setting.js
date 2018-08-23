@@ -1,6 +1,6 @@
-const url = "";
+const url = "http://localhost:56873/";
 
-const webname = '';
+const webname = 'DR005-01';
 
 export {
     url,
