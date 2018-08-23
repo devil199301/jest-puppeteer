@@ -13,7 +13,8 @@
     "cheerio-get-css-selector": "^2.0.0",
     "jest": "^23.4.1",
     "jest-puppeteer": "^3.2.1",
-    "puppeteer": "^1.6.1"
+    "puppeteer": "^1.6.1",
+    "tesseract.js": "^1.0.10"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

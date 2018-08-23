@@ -28,7 +28,8 @@ const checkList = {
         empty: `#`,
         empty1: ``,
         responsibleGambling: `/ResponsibleGambling`,
-        guide: `/Guide`
+        guide: `/Guide`,
+        mg: `/Lobby/MG`
     },
     live: {
         bb: `toBbLive()`,
@@ -118,7 +119,7 @@ const checkList = {
         'fs-everyday': `toFsFishEveryDay()`,
         'gpk-cut': `toRgCutFish()`,
     },
-    layout: ['qqClick(ContactInfo.QQ)', 'lineChatClick()', 'FreePlayClick()', 'RegisterClick()', 'qqClick(ContactInfo.QQ)', 'agreement()', 'newsClick($index)', 'closeMarquee()', 'close()', 'onTitleClick(item)', 'newsClick()', 'AgentLoginClick()']
+    layout: ['addFavoriteClick()', 'addHomePageClick()', 'qqClick(ContactInfo.QQ)', 'lineChatClick()', 'FreePlayClick()', 'RegisterClick()', 'qqClick(ContactInfo.QQ)', 'agreement()', 'newsClick($index)', 'closeMarquee()', 'close()', 'onTitleClick(item)', 'newsClick()', 'AgentLoginClick()']
 }
 
 /**
